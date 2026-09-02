@@ -8,6 +8,17 @@ const apiClient = axios.create({
   timeout: 10000,
 });
 
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("bms_auth_token");
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 apiClient.interceptors.response.use(
   (response) => response,
   (error: unknown) => {
@@ -15,7 +26,7 @@ apiClient.interceptors.response.use(
       const message =
         (error.response?.data as { message?: string })?.message ??
         error.message;
-      console.error("[API Error]", message);
+      console.warn("[API Error]", error.response?.status, message);
     }
     return Promise.reject(error);
   }
