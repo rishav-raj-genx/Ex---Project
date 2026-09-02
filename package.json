@@ -1,0 +1,13 @@
+{
+  "name": "fullstack-app",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n server,client -c blue,green \"pnpm --filter server dev\" \"pnpm --filter client dev\"",
+    "build": "pnpm --filter server build && pnpm --filter client build",
+    "server:dev": "pnpm --filter server dev",
+    "client:dev": "pnpm --filter client dev"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
