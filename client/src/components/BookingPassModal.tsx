@@ -1,4 +1,4 @@
-import { X, CheckCircle2, Ticket, Printer, MapPin, Calendar, Clock, Share2 } from "lucide-react";
+import { X, CheckCircle2, Ticket, Printer, MapPin, Calendar, Clock } from "lucide-react";
 import type { Booking } from "../types/booking";
 
 interface BookingPassModalProps {

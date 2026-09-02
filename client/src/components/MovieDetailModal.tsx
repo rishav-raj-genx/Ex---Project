@@ -6,7 +6,6 @@ import {
   Calendar,
   MapPin,
   Sparkles,
-  Ticket,
   ChevronRight,
 } from "lucide-react";
 import type { Movie } from "../types/movie";
