@@ -1,4 +1,5 @@
 import { Movie } from "../models/Movie.js";
+import { User } from "../models/User.js";
 
 const initialMovies = [
   {
@@ -113,6 +114,19 @@ const initialMovies = [
 
 export async function seedMoviesIfEmpty(): Promise<void> {
   try {
+    // Seed demo user
+    const demoUser = await User.findOne({ email: "alex.rivera@example.com" });
+    if (!demoUser) {
+      await User.create({
+        name: "Alex Rivera",
+        email: "alex.rivera@example.com",
+        password: "password123",
+        role: "admin",
+      });
+      console.log("[DB] Seeded default demo user: alex.rivera@example.com");
+    }
+
+    // Seed initial movie catalog
     const count = await Movie.countDocuments();
     if (count === 0) {
       console.log("[DB] No movies found in database. Auto-seeding initial movie catalog...");
@@ -122,6 +136,6 @@ export async function seedMoviesIfEmpty(): Promise<void> {
       console.log(`[DB] Catalog contains ${count} movies.`);
     }
   } catch (err) {
-    console.error("[DB] Failed to seed movies:", err);
+    console.error("[DB] Failed to seed database:", err);
   }
 }
