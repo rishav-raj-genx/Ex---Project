@@ -1,4 +1,5 @@
 import { useState } from "react";
+import axios from "axios";
 import {
   X,
   User as UserIcon,
@@ -51,13 +52,26 @@ export function AuthModal({ showToast }: AuthModalProps) {
         showToast("success", "Account created successfully! Welcome to BookMyShow.");
       }
     } catch (err: unknown) {
-      const message =
-        err && typeof err === "object" && "response" in err
-          ? (
-              (err as { response?: { data?: { message?: string } } })
-                .response?.data?.message ?? "Authentication failed"
-            )
-          : "Invalid email or password. Please try again.";
+      let message = "Authentication failed. Please try again.";
+      if (axios.isAxiosError(err)) {
+        if (
+          err.response?.data &&
+          typeof err.response.data === "object" &&
+          "message" in err.response.data
+        ) {
+          message = String((err.response.data as { message: unknown }).message);
+        } else if (err.response?.status === 401) {
+          message = "Invalid email or password. Please try again.";
+        } else if (err.response?.status === 409) {
+          message = "An account with this email already exists. Please Sign In.";
+        } else if (err.code === "ERR_NETWORK" || !err.response) {
+          message = "Unable to connect to backend API. Please ensure server is running.";
+        } else {
+          message = err.message || "Request failed. Please try again.";
+        }
+      } else if (err instanceof Error) {
+        message = err.message;
+      }
       setErrorMsg(message);
       showToast("error", message);
     } finally {

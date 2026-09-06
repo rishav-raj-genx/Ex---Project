@@ -19,7 +19,7 @@ function getEnvVar(key: string, fallback?: string): string {
 }
 
 export const env: EnvConfig = {
-  port: parseInt(getEnvVar("PORT", "5000"), 10),
+  port: parseInt(getEnvVar("PORT", "5001"), 10),
   mongodbUri: getEnvVar("MONGODB_URI", "mongodb://localhost:27017/bookmyshow_app"),
   nodeEnv: getEnvVar("NODE_ENV", "development") as EnvConfig["nodeEnv"],
   clientUrl: getEnvVar("CLIENT_URL", "http://localhost:5173"),

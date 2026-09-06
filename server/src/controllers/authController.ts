@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
+import passport from "passport";
 import jwt from "jsonwebtoken";
 import { User, type IUserDocument } from "../models/User.js";
 import { env } from "../config/env.js";
@@ -27,18 +28,26 @@ export async function register(
       password?: string;
     };
 
-    if (!name || !email || !password) {
+    if (!name?.trim()) {
       res.status(400).json({
         success: false,
-        message: "Please provide name, email, and password",
+        message: "Please enter your name",
       });
       return;
     }
 
-    if (password.length < 6) {
+    if (!email?.trim()) {
       res.status(400).json({
         success: false,
-        message: "Password must be at least 6 characters",
+        message: "Please enter your email address",
+      });
+      return;
+    }
+
+    if (!password || password.length < 6) {
+      res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters long",
       });
       return;
     }
@@ -49,7 +58,7 @@ export async function register(
     if (existingUser) {
       res.status(409).json({
         success: false,
-        message: "An account with this email already exists",
+        message: "An account with this email already exists. Please Sign In.",
       });
       return;
     }
@@ -64,7 +73,7 @@ export async function register(
 
     res.status(201).json({
       success: true,
-      message: "Registration successful",
+      message: "Account created successfully!",
       token,
       user: {
         id: newUser._id.toString(),
@@ -78,61 +87,44 @@ export async function register(
   }
 }
 
-export async function login(
+export function login(
   req: Request,
   res: Response,
   next: NextFunction
-): Promise<void> {
-  try {
-    const { email, password } = req.body as {
-      email?: string;
-      password?: string;
-    };
+): void {
+  passport.authenticate(
+    "local",
+    { session: false },
+    (
+      err: unknown,
+      user: IUserDocument | false,
+      info: { message?: string } | undefined
+    ) => {
+      if (err) {
+        return next(err);
+      }
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          message: info?.message || "Invalid email or password",
+        });
+      }
 
-    if (!email || !password) {
-      res.status(400).json({
-        success: false,
-        message: "Please provide both email and password",
+      const token = generateToken(user);
+
+      return res.json({
+        success: true,
+        message: "Logged in successfully",
+        token,
+        user: {
+          id: user._id.toString(),
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
       });
-      return;
     }
-
-    const normalizedEmail = email.toLowerCase().trim();
-    const user = await User.findOne({ email: normalizedEmail });
-
-    if (!user) {
-      res.status(401).json({
-        success: false,
-        message: "Invalid email or password",
-      });
-      return;
-    }
-
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      res.status(401).json({
-        success: false,
-        message: "Invalid email or password",
-      });
-      return;
-    }
-
-    const token = generateToken(user);
-
-    res.json({
-      success: true,
-      message: "Logged in successfully",
-      token,
-      user: {
-        id: user._id.toString(),
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
-    });
-  } catch (err) {
-    next(err);
-  }
+  )(req, res, next);
 }
 
 export async function getMe(
